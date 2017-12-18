@@ -43,6 +43,13 @@
 #include <ui/DisplayInfo.h>
 #include <errno.h>
 
+//#include <libavcodec/avcodec.h>
+//#include <libavformat/avformat.h>
+//#include <libavutil/opt.h>
+//#include <libavutil/pixdesc.h>
+
+#include "opengl_manager.h"
+
 static void usage(const char *me) {
     fprintf(stderr, "usage: %s [-a] use audio\n"
                     "\t\t[-v] use video\n"
@@ -119,7 +126,8 @@ static int decode(
     int frameStride = 0;
     int frameSliceHeight = 0;
     char yuv_name[64];
-
+    OPENGL_MGR_HANDLE context = NULL;
+    
     memset(yuv_name, 0, sizeof(yuv_name));
     
     KeyedVector<size_t, CodecState> stateByTrack;
@@ -316,10 +324,23 @@ static int decode(
                     // Pack frame if necessary.
                     if (writeLength < size  &&
                             (frameStride > frameWidth || frameSliceHeight > frameHeight)) {
+                        free(frame);
                         frame = PackYUV420(frameWidth, frameHeight,
                                 frameStride, frameSliceHeight, frame);
                     }
+#if 1
+                    if(NULL == context)
+                    {
+                        context = initOpenGL(frameWidth, frameHeight);
+                    }
 
+                    if(NULL != frame)
+                    {
+                        opengl_manager_push_data(context, frame);
+                        free(frame);
+                        frame = NULL;
+                    }
+#else
                     pf = fopen(yuv_name, "ab");
                     //pf = fopen("1280x736_420p.yuv", "ab");
                     if (pf){
@@ -329,7 +350,7 @@ static int decode(
                     } else {
                         printf("open (%s) error: %s\n", yuv_name, strerror(errno));
                     }
-
+#endif
 
                 }
 
@@ -422,6 +443,11 @@ static int decode(
                    (long long)state->mNumBytesDecoded,
                    state->mNumBytesDecoded * 1E6 / 1024 / elapsedTimeUs);
         }
+    }
+
+    if(NULL != context)
+    {
+        uninitOpenGL(&context);
     }
 
     return 0;
