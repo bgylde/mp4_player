@@ -16,8 +16,8 @@ LOCAL_C_INCLUDES:= \
 #LOCAL_CFLAGS += -Wno-multichar -Werror -Wall
 LOCAL_CLANG := true
 
-LOCAL_MODULE_TAGS := test_player
+LOCAL_MODULE_TAGS := mp4_player
 
-LOCAL_MODULE:= test_player
+LOCAL_MODULE:= mp4_player
 
 include $(BUILD_EXECUTABLE)
